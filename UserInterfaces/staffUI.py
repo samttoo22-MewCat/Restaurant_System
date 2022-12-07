@@ -79,14 +79,73 @@ class staffUI():
         else:
             print("You have to clock in first to clock out.")
 
-    def show(self):
-        self.cursor.execute("SELECT * FROM clock")
+    def showstaff(self):
+        self.cursor.execute("SELECT * FROM members where position = 'staff'")
+        results = self.cursor.fetchall()
+        print(results)
+
+    def showMenu(self):
+        self.cursor.execute("SELECT * FROM menu where m_type = '開胃菜'")
+        results = self.cursor.fetchall()
+        for result in results:
+            print(result)
+        print()
+
+        self.cursor.execute("SELECT * FROM menu where m_type = '沙拉'")
+        results = self.cursor.fetchall()
+        for result in results:
+            print(result)
+        print()
+        self.cursor.execute("SELECT * FROM menu where m_type = '飲品'")
+        results = self.cursor.fetchall()
+        for result in results:
+            print(result)
+        print()
+        self.cursor.execute("SELECT * FROM menu where m_type = '義大利麵'")
+        results = self.cursor.fetchall()
+        for result in results:
+            print(result)
+        print()
+        self.cursor.execute("SELECT * FROM menu where m_type = '披薩'")
+        results = self.cursor.fetchall()
+        for result in results:
+            print(result)
+        print()
+        self.cursor.execute("SELECT * FROM menu where m_type = '燉飯'")
+        results = self.cursor.fetchall()
+        for result in results:
+            print(result)
+        print()
+
+    def showOrder(self, t_number):
+        self.cursor.execute("SELECT * FROM orders where table_number = %d" % t_number)
         results = self.cursor.fetchall()
         print(results)
 
 
+    def addOrder(self, m_name, t_number):
+        from datetime import datetime
+        current_time = datetime.now()
+        current_time = datetime.strftime(current_time, '%Y-%m-%d %H:%M:%S')
+        self.cursor.execute("INSERT INTO `test`.`orders` (`time`, `m_name`, `table_number`) VALUES ('%s', '%s', %d)" % (current_time, str(m_name), int(t_number)))
+        self.db.commit()
+
+    def removeOrder(self, m_name, t_number):
+        self.cursor.execute("SELECT count(*) FROM orders WHERE m_name = '%s' and table_number = %d" % (str(m_name), int(t_number)))
+        number = self.cursor.fetchall()
+        number = number[0][0]
+        if(number > 1):
+            self.cursor.execute("SELECT * FROM orders WHERE m_name = '%s' and table_number = %d" % (str(m_name), int(t_number)))
+            results = self.cursor.fetchall()
+            last_time = results[len(results) - 1][0]
+            self.cursor.execute("DELETE FROM orders WHERE time = %d and m_name = '%s' and table_number = %d" % (last_time, str(m_name), int(t_number)))
+            self.db.commit()
+        else:
+            self.cursor.execute("DELETE FROM orders WHERE m_name = '%s' and table_number = %d" % (str(m_name), int(t_number)))
+            self.db.commit()
 sUI = staffUI("samttoo22")
 
-sUI.show()
-sUI.clockOut()
+
+
+
 

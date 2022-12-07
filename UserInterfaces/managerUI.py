@@ -24,6 +24,20 @@ class managerUI():
         except:
             pass
 
+    def addDish(self, m_type, m_name, m_price):
+        try:
+            self.cursor.execute("insert `test`.`menu` (`m_type`, `m_name`, `m_price`) VALUES ('%s', '%s', %f);" % (str(m_type), str(m_name), float(m_price)))
+            self.db.commit()
+        except:
+            pass
+    
+    def removeDish(self, m_name):
+        try:
+            self.cursor.execute("DELETE FROM menu WHERE m_name = '%d'" % (str(m_name)))
+            self.db.commit()
+        except:
+            pass
+        
 mUI = managerUI()
 
 mUI.cursor.execute("SELECT * FROM members")

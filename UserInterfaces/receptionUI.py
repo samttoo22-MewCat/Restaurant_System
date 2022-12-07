@@ -55,3 +55,4 @@ class receptionUI():
         self.cursor.execute("SELECT * FROM clock")
         results = self.cursor.fetchall()
         print(results)
+        print()
