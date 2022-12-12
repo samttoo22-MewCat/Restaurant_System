@@ -1,5 +1,5 @@
 import pymysql
-import staffUI
+#import staffUI as SUI
 import datetime
 import time
 
@@ -58,22 +58,21 @@ class cuUI():
         self.startTime = datetime.strftime(self.startTime, '%Y-%m-%d %H:%M:%S')
         self.startTime = datetime.strptime(self.startTime, '%Y-%m-%d %H:%M:%S')
 
-
     def end(self):
         from datetime import datetime
         self.endTime = datetime.now()
         self.endTime = datetime.strftime(self.endTime, '%Y-%m-%d %H:%M:%S')
         self.endTime = datetime.strptime(self.endTime, '%Y-%m-%d %H:%M:%S')
+        self.changeTableState(self.table_number, "unclean")
 
+    def changeTableState(self, table_number, state):
+            self.cursor.execute("UPDATE r_table set state = '%s' where table_number = %d" % (str(state), int(table_number)))
+            self.db.commit()
 
 
 cuUI = cuUI(1)
 cuUI.start()
-staffUI.sUI.addOrder("冰紅茶", 1)
-staffUI.sUI.addOrder("冰紅茶", 1)
-staffUI.sUI.addOrder("老船長海鮮燉飯", 1)
-staffUI.sUI.addOrder("美式咖啡", 1)
+
 
 time.sleep(2)
 cuUI.end()
-cuUI.getBill()

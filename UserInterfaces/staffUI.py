@@ -1,5 +1,7 @@
 import pymysql
 import datetime
+import cookUI as CUI
+import tkinter as tk
 
 class staffUI():
     def __init__(self, user_id):
@@ -11,7 +13,7 @@ class staffUI():
         self.user_id = str(user_id)
     
     def calWorkingMins(self):
-        self.cursor.execute("SELECT * FROM clock WHERE user_id = %s and act = 'in'", (self.user_id))
+        self.cursor.execute("SELECT * FROM clock WHERE user_id = %s and act = 'in'" % (self.user_id))
         results = self.cursor.fetchall()
         last_in = results[len(results) - 1]
         last_in = last_in[len(last_in) - 1]
@@ -22,7 +24,7 @@ class staffUI():
         last_in_dt = datetime.datetime(int(last_in_date[0]), int(last_in_date[1]), int(last_in_date[2]), int(last_in_time[0]), int(last_in_time[1]), int(last_in_time[2])) 
         
 
-        self.cursor.execute("SELECT * FROM clock WHERE user_id = %s and act = 'out'", (self.user_id))
+        self.cursor.execute("SELECT * FROM clock WHERE user_id = %s and act = 'out'" % (self.user_id))
         results = self.cursor.fetchall()
         last_out = results[len(results) - 1]
         last_out = last_out[len(last_out) - 1]
@@ -45,8 +47,7 @@ class staffUI():
         if(latest == "in"):
             return True
         else:
-            return False
-        
+            return False   
     def clockIn(self):
         from datetime import datetime
         now = datetime.now()
@@ -58,7 +59,6 @@ class staffUI():
             self.cursor.execute("INSERT INTO `test`.`clock` (`user_id`, `act`, `clocktime`) VALUES ('%s', '%s', '%s')" % (str(self.user_id), "in", current_time))
             self.db.commit()
             print("Clocked in at %s" % current_time)           
-
     def clockOut(self):
         from datetime import datetime
         now = datetime.now()
@@ -122,29 +122,32 @@ class staffUI():
         results = self.cursor.fetchall()
         print(results)
 
-
     def addOrder(self, m_name, t_number):
         from datetime import datetime
         current_time = datetime.now()
         current_time = datetime.strftime(current_time, '%Y-%m-%d %H:%M:%S')
         self.cursor.execute("INSERT INTO `test`.`orders` (`time`, `m_name`, `table_number`) VALUES ('%s', '%s', %d)" % (current_time, str(m_name), int(t_number)))
         self.db.commit()
-
+        CUI.cUI.updatePrepareList()
     def removeOrder(self, m_name, t_number):
-        self.cursor.execute("SELECT count(*) FROM orders WHERE m_name = '%s' and table_number = %d" % (str(m_name), int(t_number)))
-        number = self.cursor.fetchall()
-        number = number[0][0]
-        if(number > 1):
-            self.cursor.execute("SELECT * FROM orders WHERE m_name = '%s' and table_number = %d" % (str(m_name), int(t_number)))
-            results = self.cursor.fetchall()
-            last_time = results[len(results) - 1][0]
-            self.cursor.execute("DELETE FROM orders WHERE time = %d and m_name = '%s' and table_number = %d" % (last_time, str(m_name), int(t_number)))
-            self.db.commit()
-        else:
-            self.cursor.execute("DELETE FROM orders WHERE m_name = '%s' and table_number = %d" % (str(m_name), int(t_number)))
-            self.db.commit()
-sUI = staffUI("samttoo22")
+        index = CUI.cUI.prepareListbox.get(0, tk.END).index(m_name)
+        CUI.cUI.prepareListbox.delete()
 
+    def changeTableState(self, table_number, state):
+        self.cursor.execute("UPDATE r_table set state = '%s' where table_number = %d" % (str(state), int(table_number)))
+        self.db.commit()
+    def getTableState(self):
+        self.cursor.execute("SELECT * FROM r_table")
+        results = self.cursor.fetchall()
+        for result in results:
+            state = str(result[0])
+            table_number = int(result[1])
+            print("Table %d - %s", (table_number, state))
+
+sUI = staffUI("samttoo22")
+sUI.addOrder("奶油蔬菜義大利麵", 1)
+sUI.addOrder("冰紅茶", 1)
+CUI.cUI.open()
 
 
 

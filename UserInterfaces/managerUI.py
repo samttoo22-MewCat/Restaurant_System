@@ -29,18 +29,22 @@ class managerUI():
             self.cursor.execute("insert `test`.`menu` (`m_type`, `m_name`, `m_price`) VALUES ('%s', '%s', %f);" % (str(m_type), str(m_name), float(m_price)))
             self.db.commit()
         except:
-            pass
-    
+            pass   
     def removeDish(self, m_name):
         try:
             self.cursor.execute("DELETE FROM menu WHERE m_name = '%d'" % (str(m_name)))
             self.db.commit()
         except:
             pass
-        
-mUI = managerUI()
+    
+    def addTable(self):
+        self.cursor.execute("insert `test`.`r_table` (`state`) values ('clean');")
+        self.db.commit()
+    def removeTable(self):
+        self.cursor.execute("DELETE FROM MARKS WHERE ID = (SELECT MAX(table_number) FROM MARKS)")
+        self.db.commit()
+mUI = managerUI("samttoo22")
 
-mUI.cursor.execute("SELECT * FROM members")
-results = mUI.cursor.fetchall()
-print(results)
+mUI.addTable()
+mUI.addTable()
     

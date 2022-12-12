@@ -1,11 +1,9 @@
 import pymysql
 import datetime
-
-import time
 import tkinter as tk
-import tkinter.messagebox
 
-class cookUI():
+
+class PtUI():
     def __init__(self, user_id):
         self.db = pymysql.connect(host='localhost',
             user='root',
@@ -15,7 +13,7 @@ class cookUI():
         self.user_id = str(user_id)
         self.prepareList = []
         self.root = tk.Tk()
-        self.root.title('餐廳系統-廚師介面')
+        self.root.title('餐廳系統-雜工介面')
 
         width=750
         height=500
@@ -31,76 +29,22 @@ class cookUI():
         self.lbl_1.place(x=20,y=40,width=426,height=447)
         self.lbl_2 = tk.Label(self.root, relief = "ridge")
         self.lbl_2.place(x=460,y=40,width=270,height=447)
-        self.lbl_3 = tk.Label(self.root, bg = "yellow", text='餐點準備清單', fg='black', font=('微軟正黑體', 15), anchor='center')
+        self.lbl_3 = tk.Label(self.root, bg = "yellow", text='未清理桌子桌號', fg='black', font=('微軟正黑體', 15), anchor='center')
         self.lbl_3.place(x=20,y=10,width=426,height=30)
         self.lbl_4 = tk.Label(self.root, bg = "yellow", text='打卡', fg='black', font=('微軟正黑體', 15), anchor='center')
         self.lbl_4.place(x=460,y=10,width=270,height=30)
-        self.prepareListbox = tk.Listbox(self.root, font=('微軟正黑體', 11))
-        self.prepareListbox.place(x=80,y=80,width=300,height=300)
-        
-
-
-    def show(self):
-        self.cursor.execute("SELECT * FROM clock")
+        self.uncleanListbox = tk.Listbox(self.root, font=('微軟正黑體', 11))
+        self.uncleanListbox.place(x=80,y=80,width=300,height=300)
+    def updateUncleanedListbox(self):
+        self.cursor.execute("SELECT * FROM r_table where state = 'unclean'")
         results = self.cursor.fetchall()
-        print(results)
-        print()
-
-    def removeOrder(self, m_name, t_number):
-        self.cursor.execute("SELECT count(*) FROM orders WHERE m_name = '%s' and table_number = %d" % (str(m_name), int(t_number)))
-        number = self.cursor.fetchall()
-        number = number[0][0]
-        if(number > 1):
-            self.cursor.execute("SELECT * FROM orders WHERE m_name = '%s' and table_number = %d" % (str(m_name), int(t_number)))
-            results = self.cursor.fetchall()
-            last_time = results[len(results) - 1][0]
-            self.cursor.execute("DELETE FROM orders WHERE time = '%s' and m_name = '%s' and table_number = %d" % (last_time, str(m_name), int(t_number)))
-            self.db.commit()
-        else:
-            self.cursor.execute("DELETE FROM orders WHERE m_name = '%s' and table_number = %d" % (str(m_name), int(t_number)))
-            self.db.commit()
-
-    def updatePrepareList(self):
-        self.cursor.execute("SELECT * FROM orders")
-        results = self.cursor.fetchall()
-        first = []
-        second = []
-        third = []
         for result in results:
-            m_name = result[1]
-            t_number = result[2]
-            self.cursor.execute("SELECT m_type FROM menu where m_name = '%s'" % m_name)
-            m_type = self.cursor.fetchone()
-            m_type = m_type[0]
-            if(m_type == '開胃菜' or m_type == '沙拉'):
-                first.append("%s- 第 %d 桌" % (m_name, t_number))
-                self.removeOrder(m_name, t_number)
-            elif(m_type == '飲品'):
-                second.append("%s- 第 %d 桌" % (m_name, t_number))
-                self.removeOrder(m_name, t_number)
-            else:
-                #主菜類
-                third.append("%s- 第 %d 桌" % (m_name, t_number))
-                self.removeOrder(m_name, t_number)
-        for i in range(0, len(first)):
-            self.prepareList.append(first[i])
-        for i in range(0, len(second)):
-            self.prepareList.append(second[i])
-        for i in range(0, len(third)):
-            self.prepareList.append(third[i])
-        
-        for i in first:
-            self.prepareListbox.insert(tk.END, i)  
-        for i in second:
-            self.prepareListbox.insert(tk.END, i)
-        for i in third:
-            self.prepareListbox.insert(tk.END, i)
+            table_number = int(result[1])
+            self.uncleanListbox.insert(tk.END, "未清理- 第 %d 桌" % table_number)
 
-        self.prepareList.clear()
-    
     def open(self):
     #window set up
-        
+       
         def clockIn():
             from datetime import datetime
             now = datetime.now()
@@ -165,11 +109,15 @@ class cookUI():
             tdelta = last_out_dt - last_in_dt
             working_mins = int(tdelta.total_seconds() / 60)
             return(working_mins)
-            
+        
         #delete selected table
         def finish():
-            selectedPlace = self.prepareListbox.curselection()
-            self.prepareListbox.delete(selectedPlace)
+            selectedPlace = self.uncleanListbox.curselection()
+            text = self.uncleanListbox.get(selectedPlace)
+            table_number = int(text[7])
+
+            self.uncleanListbox.delete(selectedPlace)
+            self.changeTableState(table_number, "clean")
             
         
         #button set up
@@ -183,9 +131,15 @@ class cookUI():
 
         self.root.mainloop()
 
-cUI = cookUI("samttoo22")
+    def changeTableState(self, table_number, state):
+        self.cursor.execute("UPDATE r_table set state = '%s' where table_number = %d" % (str(state), int(table_number)))
+        self.db.commit()
+        self.cursor.execute("SELECT * FROM r_table where table_number = %d" % int(table_number))
+        result = self.cursor.fetchone()
+        state = str(result[0])
+        return state
+            
 
-
-
-
-
+PtUI = PtUI("samttoo22")
+PtUI.updateUncleanedListbox()
+PtUI.open()
