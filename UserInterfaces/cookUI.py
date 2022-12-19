@@ -183,7 +183,6 @@ class cookUI():
 
         self.root.mainloop()
 
-cUI = cookUI("samttoo22")
 
 
 

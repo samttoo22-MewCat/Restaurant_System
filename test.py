@@ -1,49 +1,120 @@
 import tkinter as tk
-import tkinter.messagebox
+import tkinter.font as tkFont
 
-#window set up
-root = tk.Tk() 
-root.title('Restaurant System')
-width=600
-height=500
-screenwidth = root.winfo_screenwidth()
-screenheight = root.winfo_screenheight()
-alignstr = '%dx%d+%d+%d' % (width, height, (screenwidth - width) / 2, (screenheight - height) / 2)
-root.geometry(alignstr)
-root.resizable(width=False, height=False)
+class App:
+    def __init__(self):
+        self.root = tk.Tk()
+        #setting title
+        self.root.title("餐廳系統-經理介面")
+        #setting window size
+        self.width=649
+        self.height=504
+        self.screenwidth = self.root.winfo_screenwidth()
+        self.screenheight = self.root.winfo_screenheight()
+        self.alignstr = '%dx%d+%d+%d' % (self.width, self.height, (self.screenwidth - self.width) / 2, (self.screenheight - self.height) / 2)
+        self.root.geometry(self.alignstr)
+        self.root.resizable(width=False, height=False)
 
-#label set up
-lbl_1 = tk.Label(root, relief = "ridge")
-lbl_1.place(x=20,y=40,width=426,height=447)
-lbl_2 = tk.Label(root, relief = "ridge")
-lbl_2.place(x=460,y=40,width=120,height=447)
-lbl_3 = tk.Label(root, bg = "yellow", text='Uncleaned Table', fg='black', font=('Arial', 20), anchor='center')
-lbl_3.place(x=20,y=10,width=426,height=30)
-lbl_4 = tk.Label(root, bg = "yellow", text='Pounch', fg='black', font=('Arial', 20), anchor='center')
-lbl_4.place(x=460,y=10,width=120,height=30)
+        self.GButton_926=tk.Button(self.root, bg="#009688", font=('微軟正黑體', 10), justify="center", text="增加桌子數量")
+        self.GButton_926.place(x=10,y=10,width=144,height=32)
+        self.GButton_926["command"] = self.GButton_926_command
 
-#show succeed message
-def succeed():
-    lbl_1 = tk.Label(root, text="pounch \n successfully")
-    lbl_1.place(x=480,y=100,width=80,height=120)
+        self.GButton_840=tk.Button(self.root, bg="#1e9fff", font=('微軟正黑體', 10), fg="#000000", justify="center", text="增加工作人員")
+        self.GButton_840.place(x=10,y=50,width=144,height=30)
+        self.GButton_840["command"] = self.GButton_840_command
 
-#delete selected table
-def finish():
-    selectedPlace = mylistbox.curselection()
-    mylistbox.delete(selectedPlace)
+        self.GButton_802=tk.Button(self.root, bg="#5fb878", font=('微軟正黑體', 10), fg="#000000", justify="center", text="減少桌子數量")
+        self.GButton_802.place(x=170,y=10,width=141,height=32)
+        self.GButton_802["command"] = self.GButton_802_command
 
-#make a listbox
-mylistbox = tk.Listbox(root)
-for i in ['Table 1','Table 2','Table 3','Table 4','Table 5']:
-    mylistbox.insert(tk.END, i)
-mylistbox.place(x=80,y=100,width=300,height=150)
+        self.GLabel_153=tk.Label(self.root, bg="#ffb800", font=('微軟正黑體', 10), fg="#333333", justify="center", text="帳號")
+        self.GLabel_153.place(x=10,y=90,width=71,height=30)
 
-#button set up
-bt_1 = tk.Button(root, text='finish', font=('Arial', 15), command=finish)
-bt_1.place(x=190,y=300,width=70,height=25)
-bt_2 = tk.Button(root, text='pounch in', font=('Arial', 12), command=succeed)
-bt_2.place(x=478,y=400,width=88,height=30)
-bt_3 = tk.Button(root, text='pounch out', font=('Arial', 12), command=succeed)
-bt_3.place(x=478,y=440,width=88,height=30)
+        self.GLineEdit_248=tk.Entry(self.root, borderwidth="1px", font=('微軟正黑體', 10), fg="#333333", justify="center")
+        self.GLineEdit_248.place(x=80,y=90,width=181,height=30)
 
-root.mainloop()
+        self.GLabel_831=tk.Label(self.root, bg="#ffb800", font=('微軟正黑體', 10), fg="#333333", justify="center", text="密碼")
+        self.GLabel_831.place(x=10,y=130,width=70,height=30)
+
+        self.GLabel_717=tk.Label(self.root, bg="#ffb800", font=('微軟正黑體', 10), fg="#333333", justify="center", text="職位")
+        self.GLabel_717.place(x=10,y=170,width=70,height=30)
+
+        self.GLineEdit_257=tk.Entry(self.root, borderwidth="1px", font=('微軟正黑體', 10), fg="#333333", justify="center")
+        self.GLineEdit_257.place(x=80,y=130,width=181,height=30)
+
+        self.GLineEdit_949=tk.Entry(self.root, borderwidth="1px", font=('微軟正黑體', 10), fg="#333333", justify="center")
+        self.GLineEdit_949.place(x=80,y=170,width=181,height=30)
+
+        self.GButton_972=tk.Button(self.root, bg="#1e9fff", font=('微軟正黑體', 10), fg="#000000", justify="center", text="刪除工作人員")
+        self.GButton_972.place(x=10,y=210,width=144,height=30)
+        self.GButton_972["command"] = self.GButton_972_command
+
+        self.GLabel_653=tk.Label(self.root, bg="#ffb800", font=('微軟正黑體', 10), fg="#333333", justify="center", text="帳號")
+        self.GLabel_653.place(x=10,y=250,width=70,height=30)
+
+        self.GLineEdit_295=tk.Entry(self.root, borderwidth="1px", font=('微軟正黑體', 10), fg="#333333", justify="center")
+        self.GLineEdit_295.place(x=80,y=250,width=182,height=30)
+
+        self.GButton_774=tk.Button(self.root, bg="#00babd", font=('微軟正黑體', 10), fg="#000000", justify="center", text="查看工資列表")
+        self.GButton_774.place(x=360,y=90,width=144,height=30)
+        self.GButton_774["command"] = self.GButton_774_command
+
+        self.GButton_936=tk.Button(self.root, bg="#00babd", font=('微軟正黑體', 10), fg="#000000", justify="center", text="查看盈餘狀況")
+        self.GButton_936.place(x=360,y=130,width=143,height=30)
+        self.GButton_936["command"] = self.GButton_936_command
+
+        self.GButton_29=tk.Button(self.root, bg="#00babd", font=('微軟正黑體', 10), fg="#000000", justify="center", text="查看員工效率")
+        self.GButton_29.place(x=360,y=170,width=144,height=30)
+        self.GButton_29["command"] = self.GButton_29_command
+
+        self.GButton_91=tk.Button(self.root, bg="#c71585", font=('微軟正黑體', 10), fg="#000000", justify="center", text="刷下")
+        self.GButton_91.place(x=10,y=350,width=144,height=30)
+        self.GButton_91["command"] = self.GButton_91_command
+
+        self.GButton_335=tk.Button(self.root, bg="#c71585", font=('微軟正黑體', 10), fg="#000000", justify="center", text="刷上")
+        self.GButton_335.place(x=10,y=310,width=145,height=30)
+        self.GButton_335["command"] = self.GButton_335_command
+
+        self.GMessage_750=tk.Message(self.root, font=('微軟正黑體', 10), fg="#000000", justify="center", text="打卡訊息")
+        self.GMessage_750.place(x=170,y=310,width=263,height=162)
+
+    def GButton_926_command(self):
+        print("command")
+
+
+    def GButton_840_command(self):
+        print("command")
+
+
+    def GButton_802_command(self):
+        print("command")
+
+
+    def GButton_972_command(self):
+        print("command")
+
+
+    def GButton_774_command(self):
+        print("command")
+
+
+    def GButton_936_command(self):
+        print("command")
+
+
+    def GButton_29_command(self):
+        print("command")
+
+
+    def GButton_91_command(self):
+        print("command")
+
+
+    def GButton_335_command(self):
+        print("command")
+    def open(self):
+        self.root.mainloop()
+
+if __name__ == "__main__":
+    app = App()
+    app.open()

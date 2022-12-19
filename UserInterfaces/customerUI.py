@@ -57,6 +57,7 @@ class cuUI():
         self.startTime = datetime.now()
         self.startTime = datetime.strftime(self.startTime, '%Y-%m-%d %H:%M:%S')
         self.startTime = datetime.strptime(self.startTime, '%Y-%m-%d %H:%M:%S')
+        self.changeTableTaken(self.table_number, True)
 
     def end(self):
         from datetime import datetime
@@ -64,15 +65,15 @@ class cuUI():
         self.endTime = datetime.strftime(self.endTime, '%Y-%m-%d %H:%M:%S')
         self.endTime = datetime.strptime(self.endTime, '%Y-%m-%d %H:%M:%S')
         self.changeTableState(self.table_number, "unclean")
+        self.changeTableTaken(self.table_number, False)
 
     def changeTableState(self, table_number, state):
             self.cursor.execute("UPDATE r_table set state = '%s' where table_number = %d" % (str(state), int(table_number)))
             self.db.commit()
+    
 
 
 cuUI = cuUI(1)
 cuUI.start()
 
-
-time.sleep(2)
 cuUI.end()

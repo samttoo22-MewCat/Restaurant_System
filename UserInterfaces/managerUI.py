@@ -12,17 +12,13 @@ class managerUI():
 
 
     def addMember(self, position, username, password):
-        try:
-            self.cursor.execute("INSERT INTO `test`.`members` (`user_id`, `user_password`, `position`, `work_mins`) VALUES ('%s', '%s', '%s', '%d')" % (str(username), str(password), str(position)), 0)
-            self.db.commit()
-        except:
-            pass
+        self.cursor.execute("INSERT INTO `test`.`members` (`user_id`, `user_password`, `position`, `work_mins`) VALUES ('%s', '%s', '%s', '%d')" % (str(username), str(password), str(position), 0))
+        self.db.commit()
+        
     def removeMember(self, username):
-        try:
-            self.cursor.execute("DELETE FROM members WHERE user_id = '%s'" % str(username))
-            self.db.commit()
-        except:
-            pass
+        self.cursor.execute("DELETE FROM members WHERE user_id = '%s'" % str(username))
+        self.db.commit()
+        
 
     def addDish(self, m_type, m_name, m_price):
         try:
@@ -38,13 +34,26 @@ class managerUI():
             pass
     
     def addTable(self):
-        self.cursor.execute("insert `test`.`r_table` (`state`) values ('clean');")
+        self.cursor.execute("select table_number from r_table")
+        
+        table_number = self.cursor.fetchall()    
+        last_table_number = table_number[len(table_number) - 1][0]
+
+        self.cursor.execute("insert `test`.`r_table` (`state`, `tableorderList`, `table_number`) values ('空', '', %d);" % (last_table_number + 1))
         self.db.commit()
     def removeTable(self):
-        self.cursor.execute("DELETE FROM MARKS WHERE ID = (SELECT MAX(table_number) FROM MARKS)")
-        self.db.commit()
+        self.cursor.execute("select table_number from r_table")
+        table_number = self.cursor.fetchall()
+        table_number = table_number[0]
+        
+        last_table_number = table_number[len(table_number) - 1]
+        if(last_table_number > 0):
+            self.cursor.execute("SELECT MAX(table_number) FROM r_table")
+            table_number = self.cursor.fetchone()
+            table_number = table_number[0]
+
+            self.cursor.execute("DELETE FROM r_table WHERE table_number = %d" % table_number)
+            self.db.commit()
 mUI = managerUI("samttoo22")
 
-mUI.addTable()
-mUI.addTable()
-    
+mUI.addMember("cook", "cook01", "999999")
