@@ -69,6 +69,10 @@ class staffUI():
             tdelta = last_out_dt - last_in_dt
             working_mins = int(tdelta.total_seconds() / 60)
             return(working_mins)
+        def changeTableState(table_number, state):
+            self.cursor.execute("UPDATE r_table set state = '%s' where table_number = %d" % (state, table_number))
+            self.db.commit()
+        
         self.db = pymysql.connect(host='localhost',
             user='root',
             password='910925As',
@@ -110,18 +114,6 @@ class staffUI():
         r_table_num = len(self.cursor.fetchall())
         for i in range(r_table_num):
             self.addTableMenu()
-
-        #table state
-        sets=("空","正在使用","需清潔")
-
-        #change table state
-        var1=tk.StringVar(self.root) 
-        var1.set("空")
-
-        #show table state
-        opm_1=tk.OptionMenu(self.root, var1, *sets)
-        opm_1.place(x=180,y=110,width=100,height=35)
-
     
     def changeList(self, table_number):
         table_number = int(table_number)
@@ -209,11 +201,12 @@ class staffUI():
         def menuSelect():
             selectedPlace = menuListbox.curselection()
             m_name = menuListbox.get(selectedPlace)
-            self.addOrder(m_name)
+            self.addOrder(m_name, self.tableNumber)
 
             self.cursor.execute("SELECT tableorderList FROM r_table where table_number = %d" % table_number)
             oldorderList = self.cursor.fetchone()
             try:
+                
                 oldorderList = oldorderList[0]
                 neworderList = oldorderList + " %s" % m_name
             except:
@@ -260,10 +253,10 @@ class staffUI():
         var=tk.StringVar(self.root) 
         var.set("空")
 
-        opm=tk.OptionMenu(self.root, var, *sets)
+        opm=tk.OptionMenu(self.root, var, *sets, command= lambda x = None: self.changeTableState(state=var.get(), table_number=bt.cget('text')[3]))
         opm.place(x=180,y=110 + self.tableNumber * 40,width=100,height=35)
-        
-        bt = tk.Button(self.root, text = '點餐 %d' % (self.tableNumber + 1), font = ('微軟正黑體', 12), command=lambda: self.changeList(bt.cget('text')[3]))
+
+        bt = tk.Button(self.root, text = '點餐 %d' % (self.tableNumber + 1), font = ('微軟正黑體', 12), command=lambda x = None: self.changeList(bt.cget('text')[3]))
         
         bt.place(x=300,y=110+ self.tableNumber * 40,width=50,height=35)
         
@@ -303,7 +296,8 @@ class staffUI():
             table_number = int(result[1])
             print("Table %d - %s", (table_number, state))
 
-
+UI = staffUI("samttoo22")
+UI.open()
 
 
 
