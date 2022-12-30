@@ -111,7 +111,23 @@ class managerUI():
             self.db.commit()
             self.lbl_1 = tk.Label(self.root, text="已成功刪除員工帳號: %s" % (username), font=('微軟正黑體', 12))
             self.lbl_1.place(x=170,y=310,width=263,height=162)
-        
+        def showMembers():
+            output = ""
+            nextline = 0
+            self.cursor.execute("SELECT user_id FROM members")
+            results = self.cursor.fetchall()
+            for result in results:
+                result = result[0]
+                if(nextline < 4):
+                    output = output + " " + result
+                    nextline += 1
+                else:
+                    output = output + "\n" + result
+                    nextline = 0
+            
+            self.lbl_1 = tk.Label(self.root, text="%s" % output)
+            self.lbl_1.place(x=170,y=310,width=263,height=162)
+
         def thisPositionExist(postion):
             if(postion == "manager" or postion == "staff" or postion == "PTworker" or postion == "reception" or postion == "staff"):
                 return True
@@ -121,7 +137,8 @@ class managerUI():
         self.db = pymysql.connect(host='localhost',
             user='root',
             password='910925As',
-            database='test')
+            database='test',
+            autocommit=True)
         self.cursor = self.db.cursor()
         self.user_id = str(user_id)
         self.root = tk.Tk()
@@ -145,7 +162,7 @@ class managerUI():
         self.GButton_840=tk.Button(self.root, bg="#1e9fff", font=('微軟正黑體', 10), fg="#000000", justify="center", text="增加工作人員", command= lambda: addMember(username=self.GLineEdit_248.get(), password=self.GLineEdit_257.get(), position=self.GLineEdit_949.get()))
         self.GButton_840.place(x=10,y=50,width=144,height=30)
 
-        self.GButton_840=tk.Button(self.root, bg="#1e9fff", font=('微軟正黑體', 10), fg="#000000", justify="center", text="顯示工作人員名單")
+        self.GButton_840=tk.Button(self.root, bg="#1e9fff", font=('微軟正黑體', 10), fg="#000000", justify="center", text="顯示工作人員名單", command= showMembers)
         self.GButton_840.place(x=170,y=50,width=144,height=30)
 
         self.GButton_972=tk.Button(self.root, bg="#1e9fff", font=('微軟正黑體', 10), fg="#000000", justify="center", text="刪除工作人員", command= lambda: removeMember(username=self.GLineEdit_295.get()))
@@ -189,13 +206,6 @@ class managerUI():
 
         self.GLineEdit_295=tk.Entry(self.root, borderwidth="1px", font=('微軟正黑體', 10), fg="#333333", justify="left")
         self.GLineEdit_295.place(x=80,y=250,width=182,height=30)
-
-        
-    
-
-
-    
-        
 
     def addDish(self, m_type, m_name, m_price):
         try:

@@ -3,8 +3,9 @@ import datetime
 import tkinter as tk
 from functools import partial
 
+
 class staffUI():
-    def __init__(self, user_id):
+    def __init__(self, user_id, root):
         def clockIn():
             from datetime import datetime
             now = datetime.now()
@@ -76,13 +77,15 @@ class staffUI():
         self.db = pymysql.connect(host='localhost',
             user='root',
             password='910925As',
-            database='test')
+            database='test',
+            autocommit=True)
         self.cursor = self.db.cursor()
         self.user_id = str(user_id)
         
         self.prepareList = []
         #window set up
-        self.root = tk.Tk() 
+        
+        self.root = tk.Toplevel(root)
         self.root.title('餐廳系統-服務員介面')
         self.width=750
         self.height=500
@@ -114,6 +117,7 @@ class staffUI():
         r_table_num = len(self.cursor.fetchall())
         for i in range(r_table_num):
             self.addTableMenu()
+        self.root.protocol("WM_DELETE_WINDOW", self.root.destroy)
     
     def changeList(self, table_number):
         table_number = int(table_number)
@@ -127,8 +131,18 @@ class staffUI():
         newWindow.geometry(alignstr)
         newWindow.resizable(width=False, height=False)
         selectedbox = []
+        newOrder = []
         
-
+        
+        def updatenewOrder():
+            for order in newOrder:
+                order = order.split(" ")
+                m_name = order[0]
+                table_number = int(order[1])
+                self.addOrder(m_name, table_number)
+            newOrder.clear()
+            newWindow.destroy()
+            
         def getMenu():
             self.cursor.execute("SELECT * FROM menu where m_type = '開胃菜'")
             results = self.cursor.fetchall()
@@ -191,17 +205,29 @@ class staffUI():
             results = self.cursor.fetchone()
             results = results[0]
             results = results.split(" ")
+            fixedresult = ""
+            for result in results:
+                if(result == ""):
+                    pass
+                else:
+                    if(fixedresult == ""):
+                        fixedresult = result
+                    else:
+                        fixedresult = fixedresult + " " + result
+
             for result in results:
                 if(result == ""):
                     pass
                 else:
                     tableorderListbox.insert(tk.END, result)
-
+            
+            self.cursor.execute("UPDATE r_table set tableorderList = '%s' where table_number = %d" % (fixedresult, table_number))
+            self.db.commit()
         #menu for adding
         def menuSelect():
             selectedPlace = menuListbox.curselection()
             m_name = menuListbox.get(selectedPlace)
-            self.addOrder(m_name, self.tableNumber)
+            newOrder.append("%s %s" % (m_name, str(table_number)))
 
             self.cursor.execute("SELECT tableorderList FROM r_table where table_number = %d" % table_number)
             oldorderList = self.cursor.fetchone()
@@ -210,7 +236,7 @@ class staffUI():
                 oldorderList = oldorderList[0]
                 neworderList = oldorderList + " %s" % m_name
             except:
-                neworderList = ""
+                pass
             
             self.cursor.execute("UPDATE r_table set tableorderList = '%s' where table_number = %d" % (neworderList, table_number))
             self.db.commit()
@@ -221,11 +247,11 @@ class staffUI():
 
         
         #label set up
-        lbl_nowList = tk.Label(newWindow, text='此桌已點清單', bg='yellow', font=('微軟正黑體', 20))
+        lbl_nowList = tk.Label(newWindow, text='此桌已點清單', bg='yellow', font=('微軟正黑體', 15))
         lbl_nowList.place(x=20,y=30,width=291,height=30)
         lbl_bg1 = tk.Label(newWindow, relief = "ridge")
         lbl_bg1.place(x=20,y=60,width=291,height=423)
-        lbl_addList = tk.Label(newWindow, text='餐點清單', bg='yellow', font=('微軟正黑體', 20))
+        lbl_addList = tk.Label(newWindow, text='餐點清單', bg='yellow', font=('微軟正黑體', 15))
         lbl_addList.place(x=330,y=30,width=250,height=30)
         lbl_bg2 = tk.Label(newWindow, relief = "ridge")
         lbl_bg2.place(x=330,y=60,width=251,height=422)
@@ -234,24 +260,31 @@ class staffUI():
         bt_delete = tk.Button(newWindow, text='刪除餐點', font=('微軟正黑體', 12), command=delete)
         bt_delete.place(x=130,y=430,width=73,height=33)
         bt_add = tk.Button(newWindow, text='添加餐點', font=('微軟正黑體', 12), command=menuSelect)
-        bt_add.place(x=420,y=430,width=73,height=32)
+        bt_add.place(x=420,y=430,width=73,height=33)
         #make a listbox
         tableorderListbox = tk.Listbox(newWindow)
         tableorderListbox.place(x=60,y=90,width=212,height=314)
         menuListbox = tk.Listbox(newWindow)
         menuListbox.place(x=350,y=90,width=212,height=314)
+        newWindow.protocol("WM_DELETE_WINDOW", updatenewOrder)
 
         updateSelectedList()
         getMenu()
         
-        
     def addTableMenu(self):
+        def updateTableState():
+            #print("updateTableState %s" % bt.cget('text')[3])
+            self.cursor.execute("select state from r_table where table_number = %d" % int(bt.cget('text')[3]))
+            state = self.cursor.fetchone()
+            var.set(state[0])
+            self.root.after(100, updateTableState)
+
         lbl = tk.Label(self.root, text = '桌子 %d' % (self.tableNumber + 1), font = ('微軟正黑體', 16))
         lbl.place(x = 90, y = 110 + self.tableNumber * 40, width = 70, height = 35)
 
         sets=("空","正在使用","需清潔")
         var=tk.StringVar(self.root) 
-        var.set("空")
+        var.set(self.getTableState(self.tableNumber + 1))
 
         opm=tk.OptionMenu(self.root, var, *sets, command= lambda x = None: self.changeTableState(state=var.get(), table_number=bt.cget('text')[3]))
         opm.place(x=180,y=110 + self.tableNumber * 40,width=100,height=35)
@@ -259,18 +292,13 @@ class staffUI():
         bt = tk.Button(self.root, text = '點餐 %d' % (self.tableNumber + 1), font = ('微軟正黑體', 12), command=lambda x = None: self.changeList(bt.cget('text')[3]))
         
         bt.place(x=300,y=110+ self.tableNumber * 40,width=50,height=35)
-        
+
+        self.root.after(100, updateTableState)
         self.tableNumber += 1
     
     def open(self):
         
         self.root.mainloop()
-
-
-    def showstaff(self):
-        self.cursor.execute("SELECT * FROM members where position = 'staff'")
-        results = self.cursor.fetchall()
-        print(results)
 
     def showOrder(self, t_number):
         self.cursor.execute("SELECT * FROM orders where table_number = %d" % t_number)
@@ -284,20 +312,23 @@ class staffUI():
         self.cursor.execute("INSERT INTO `test`.`orders` (`time`, `m_name`, `table_number`) VALUES ('%s', '%s', %d)" % (current_time, str(m_name), int(t_number)))
         self.db.commit()
         
-
     def changeTableState(self, table_number, state):
+        if(state == "需清潔"):
+            self.cursor.execute("update r_table set tableorderList = '' where table_number = '%s'" % table_number)
         self.cursor.execute("UPDATE r_table set state = '%s' where table_number = %d" % (str(state), int(table_number)))
         self.db.commit()
-    def getTableState(self):
-        self.cursor.execute("SELECT * FROM r_table")
-        results = self.cursor.fetchall()
-        for result in results:
-            state = str(result[0])
-            table_number = int(result[1])
-            print("Table %d - %s", (table_number, state))
+    def getTableState(self, table_number):
+        self.cursor.execute("SELECT * FROM r_table where table_number = %d" % table_number)
+        result = self.cursor.fetchone()
+        print(result)
+        state = str(result[0])
+        return(state)
 
-UI = staffUI("samttoo22")
-UI.open()
+    
+
+
+
+           
 
 
 

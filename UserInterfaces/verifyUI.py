@@ -10,7 +10,8 @@ class verifyUI():
         self.db = pymysql.connect(host='localhost',
             user='root',
             password='910925As',
-            database='test')
+            database='test',
+            autocommit=True)
         self.cursor = self.db.cursor()
         self.postion = ""
         self.opened = False

@@ -4,47 +4,7 @@ import tkinter as tk
 
 
 class PtUI():
-    def __init__(self, user_id):
-        self.db = pymysql.connect(host='localhost',
-            user='root',
-            password='910925As',
-            database='test')
-        self.cursor = self.db.cursor()
-        self.user_id = str(user_id)
-        self.prepareList = []
-        self.root = tk.Tk()
-        self.root.title('餐廳系統-雜工介面')
-
-        width=750
-        height=500
-        screenwidth = self.root.winfo_screenwidth()
-        screenheight = self.root.winfo_screenheight()
-        alignstr = '%dx%d+%d+%d' % (width, height, (screenwidth - width) / 2, (screenheight - height) / 2)
-
-        self.root.geometry(alignstr)
-        self.root.resizable(width=False, height=False)
-        
-        #label set up
-        self.lbl_1 = tk.Label(self.root, relief = "ridge")
-        self.lbl_1.place(x=20,y=40,width=426,height=447)
-        self.lbl_2 = tk.Label(self.root, relief = "ridge")
-        self.lbl_2.place(x=460,y=40,width=270,height=447)
-        self.lbl_3 = tk.Label(self.root, bg = "yellow", text='未清理桌子桌號', fg='black', font=('微軟正黑體', 15), anchor='center')
-        self.lbl_3.place(x=20,y=10,width=426,height=30)
-        self.lbl_4 = tk.Label(self.root, bg = "yellow", text='打卡', fg='black', font=('微軟正黑體', 15), anchor='center')
-        self.lbl_4.place(x=460,y=10,width=270,height=30)
-        self.uncleanListbox = tk.Listbox(self.root, font=('微軟正黑體', 11))
-        self.uncleanListbox.place(x=80,y=80,width=300,height=300)
-    def updateUncleanedListbox(self):
-        self.cursor.execute("SELECT * FROM r_table where state = 'unclean'")
-        results = self.cursor.fetchall()
-        for result in results:
-            table_number = int(result[1])
-            self.uncleanListbox.insert(tk.END, "未清理- 第 %d 桌" % table_number)
-
-    def open(self):
-    #window set up
-       
+    def __init__(self, user_id, root):
         def clockIn():
             from datetime import datetime
             now = datetime.now()
@@ -109,17 +69,46 @@ class PtUI():
             tdelta = last_out_dt - last_in_dt
             working_mins = int(tdelta.total_seconds() / 60)
             return(working_mins)
-        
-        #delete selected table
         def finish():
             selectedPlace = self.uncleanListbox.curselection()
             text = self.uncleanListbox.get(selectedPlace)
-            table_number = int(text[7])
+            table_number = int(text[8])
 
             self.uncleanListbox.delete(selectedPlace)
-            self.changeTableState(table_number, "clean")
-            
+            self.changeTableState(table_number, "空")
+
+        self.db = pymysql.connect(host='localhost',
+            user='root',
+            password='910925As',
+            database='test',
+            autocommit=True)
+        self.cursor = self.db.cursor()
+        self.user_id = str(user_id)
+        self.prepareList = []
+        self.root = tk.Toplevel(root)
+        self.root.title('餐廳系統-雜工介面')
+
+        width=750
+        height=500
+        screenwidth = self.root.winfo_screenwidth()
+        screenheight = self.root.winfo_screenheight()
+        alignstr = '%dx%d+%d+%d' % (width, height, (screenwidth - width) / 2, (screenheight - height) / 2)
+
+        self.root.geometry(alignstr)
+        self.root.resizable(width=False, height=False)
         
+        #label set up
+        self.lbl_1 = tk.Label(self.root, relief = "ridge")
+        self.lbl_1.place(x=20,y=40,width=426,height=447)
+        self.lbl_2 = tk.Label(self.root, relief = "ridge")
+        self.lbl_2.place(x=460,y=40,width=270,height=447)
+        self.lbl_3 = tk.Label(self.root, bg = "yellow", text='未清理桌子桌號', fg='black', font=('微軟正黑體', 15), anchor='center')
+        self.lbl_3.place(x=20,y=10,width=426,height=30)
+        self.lbl_4 = tk.Label(self.root, bg = "yellow", text='打卡', fg='black', font=('微軟正黑體', 15), anchor='center')
+        self.lbl_4.place(x=460,y=10,width=270,height=30)
+        self.uncleanListbox = tk.Listbox(self.root, font=('微軟正黑體', 11))
+        self.uncleanListbox.place(x=80,y=80,width=300,height=300)
+
         #button set up
         bt_1 = tk.Button(self.root, text='完成', font=('微軟正黑體', 12), command=finish )
         bt_1.place(x=190,y=440,width=88,height=30)
@@ -128,7 +117,19 @@ class PtUI():
         bt_3 = tk.Button(self.root, text='刷下', font=('微軟正黑體', 12), command=clockOut)
         bt_3.place(x=624,y=440,width=88,height=30)
 
+        self.root.after(100, self.updateUncleanedListbox)
+        self.root.protocol("WM_DELETE_WINDOW", lambda x = None: self.root.destroy())
+    def updateUncleanedListbox(self):
+        self.cursor.execute("SELECT table_number FROM r_table where state = '需清潔'")
+        newUncleanedListbox = self.cursor.fetchall()
+        currentUncleanedListbox = self.uncleanListbox.get(0, tk.END)
+        for i in newUncleanedListbox:
+            output = "需清潔 - 第 %d 桌" % i
+            if(output not in currentUncleanedListbox):
+                self.uncleanListbox.insert(tk.END, "需清潔 - 第 %d 桌" % i)
+        self.root.after(100, self.updateUncleanedListbox)
 
+    def open(self):
         self.root.mainloop()
 
     def changeTableState(self, table_number, state):
@@ -139,7 +140,3 @@ class PtUI():
         state = str(result[0])
         return state
             
-
-PtUI = PtUI("samttoo22")
-PtUI.updateUncleanedListbox()
-PtUI.open()
